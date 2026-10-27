@@ -1,0 +1,25 @@
+.login-page { width: 480px; margin-inline: auto; padding-block: 48px 64px; }
+
+.login-heading { margin-bottom: 28px; text-align: center; }
+
+.login-heading h1 { margin: 0; font-size: 30px; line-height: 1.25; letter-spacing: -1px; font-weight: 650; }
+
+.login-heading p { margin: 12px 0 0; color: var(--color-muted); font-size: 14px; }
+
+.login-card { padding: 32px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+
+.login-fields { display: grid; gap: 20px; min-width: 0; margin: 0; padding: 0; border: 0; }
+
+.login-submit { width: 100%; margin-top: 4px; padding-block: 12px; }
+
+.password-toggle { justify-self: end; padding: 4px 0; border: 0; background: transparent; color: var(--color-accent); font-size: 12px; }
+
+.password-toggle:disabled { cursor: not-allowed; opacity: 0.65; }
+
+.login-register { margin: 24px 0 0; text-align: center; color: var(--color-muted); font-size: 14px; }
+
+.login-register a { color: var(--color-accent); font-weight: 600; }
+
+.login-back { display: block; width: fit-content; margin: 24px auto 0; color: var(--color-muted); font-size: 13px; }
+
+.login-register a:hover, .login-back:hover, .password-toggle:hover:not(:disabled) { color: var(--color-accent); text-decoration: underline; }

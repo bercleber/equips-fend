@@ -1,0 +1,30 @@
+# Configurações locais e credenciais
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# Dependências e arquivos gerados
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# Configurações pessoais do editor
+.idea/
+.vscode/
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-auth-required="index.html">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipamentos | 0equips</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/index.css">
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/index.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+      <nav class="navbar container" aria-label="Navegação principal" x-data="accountNavigation">
+        <a class="brand" href="login.html" :href="home" aria-label="0equips — página inicial">
+          <span class="brand-mark" aria-hidden="true">0</span>
+          <span>0equips</span>
+        </a>
+        <template x-for="link in links" :key="link.href">
+          <a class="nav-link" :href="link.href" :aria-current="currentPage === link.href ? 'page' : null" x-text="link.label"></a>
+        </template>
+        <div class="nav-auth" role="group" aria-label="Acesso à conta">
+          <div class="nav-user" x-cloak x-show="authenticated" aria-label="Usuário conectado">
+            <span class="nav-user-name" x-text="userName" :title="userName"></span>
+            <span class="nav-user-role" x-text="roleLabel"></span>
+          </div>
+          <button class="button" type="button" @click="logout()">Sair</button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="conteudo" class="container" x-data="equipmentList">
+      <header class="page-heading">
+        <p class="eyebrow">Inventário</p>
+        <h1>Equipamentos</h1>
+        <p>Consulte os itens cadastrados e encontre o equipamento que procura.</p>
+      </header>
+
+      <section class="inventory" aria-labelledby="inventory-title" :aria-busy="loading">
+        <div class="inventory-toolbar">
+          <div class="inventory-title">
+            <h2 id="inventory-title">Itens cadastrados</h2>
+            <span class="item-count" x-cloak x-show="!loading && !error" x-text="items.length" aria-label="Total de itens"></span>
+          </div>
+          <div class="search-field">
+            <label for="equipment-search">Buscar equipamentos</label>
+            <input id="equipment-search" type="search" x-model="search" placeholder="Buscar por nome ou categoria" :disabled="loading || !!error">
+          </div>
+        </div>
+
+        <p class="list-state" x-show="loading" role="status">Carregando equipamentos…</p>
+
+        <div class="list-state" x-cloak x-show="error" role="alert">
+          <h3>Não foi possível carregar os equipamentos</h3>
+          <p x-text="error"></p>
+          <button class="button" type="button" @click="loadItems()">Tentar novamente</button>
+        </div>
+
+        <div class="list-state" x-cloak x-show="!loading && !error && items.length === 0" role="status">
+          <h3>Nenhum equipamento cadastrado</h3>
+          <p>Os itens aparecerão aqui assim que forem cadastrados.</p>
+        </div>
+
+        <div class="list-state" x-cloak x-show="!loading && !error && items.length > 0 && filteredItems.length === 0" role="status">
+          <h3>Nenhum resultado encontrado</h3>
+          <p>Tente buscar por outro nome ou categoria.</p>
+          <button class="button" type="button" @click="search = ''">Limpar busca</button>
+        </div>
+
+        <div x-cloak x-show="!loading && !error && filteredItems.length > 0">
+          <table class="equipment-table">
+            <caption class="visually-hidden">Equipamentos cadastrados e suas categorias</caption>
+            <thead>
+              <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Categoria</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="item in filteredItems" :key="item.id">
+                <tr>
+                  <th scope="row" x-text="item.name"></th>
+                  <td><span class="category-tag" x-text="item.category.name"></span></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <p class="list-footer" role="status" x-text="`${filteredItems.length} de ${items.length} ${items.length === 1 ? 'item' : 'itens'}`"></p>
+        </div>
+      </section>
+      <noscript><p class="noscript-message">Ative o JavaScript no navegador para consultar os equipamentos.</p></noscript>
+    </main>
+  </body>
+</html>

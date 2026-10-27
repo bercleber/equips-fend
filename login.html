@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar | 0equips</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/login.css">
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/login.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+      <nav class="navbar container" aria-label="Navegação principal" x-data="accountNavigation">
+        <a class="brand" href="login.html" :href="home" aria-label="0equips — página inicial">
+          <span class="brand-mark" aria-hidden="true">0</span>
+          <span>0equips</span>
+        </a>
+        <div class="nav-auth" role="group" aria-label="Acesso à conta">
+          <a class="button button-primary" href="register.html">Registrar</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="conteudo" class="login-page" x-data="loginForm">
+      <header class="login-heading">
+        <h1>Entre na sua conta</h1>
+        <p>Acesse o 0equips com seu email e senha.</p>
+      </header>
+
+      <section class="login-card" aria-label="Login">
+        <form method="post" @submit.prevent="login()" :aria-busy="submitting">
+          <fieldset class="login-fields" disabled :disabled="submitting">
+            <legend class="visually-hidden">Dados de acesso</legend>
+
+            <div class="form-field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" x-model.trim="email" required>
+            </div>
+
+            <div class="form-field">
+              <label for="password">Senha</label>
+              <input id="password" name="password" type="password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" x-model="password" required>
+              <button class="password-toggle" type="button" @click="showPassword = !showPassword" :aria-pressed="showPassword" aria-controls="password" x-text="showPassword ? 'Ocultar senha' : 'Mostrar senha'">Mostrar senha</button>
+            </div>
+
+            <button class="button button-primary login-submit" type="submit" x-text="submitting ? 'Entrando…' : 'Entrar'">Entrar</button>
+          </fieldset>
+          <p class="form-message form-error" x-cloak x-show="error" x-text="error" role="alert"></p>
+          <p class="visually-hidden" role="status" x-text="submitting ? 'Acessando sua conta. Aguarde.' : ''"></p>
+        </form>
+        <p class="login-register">Ainda não tem uma conta? <a href="register.html">Registrar</a></p>
+        <noscript><p class="form-message">Ative o JavaScript no navegador para entrar na sua conta.</p></noscript>
+      </section>
+
+      <a class="login-back" href="index.html">Voltar para equipamentos</a>
+    </main>
+  </body>
+</html>

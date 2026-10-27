@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-auth-required="users.html">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar usuários | 0equips</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/users.css">
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/users.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+      <nav class="navbar container" aria-label="Navegação principal" x-data="accountNavigation">
+        <a class="brand" href="login.html" :href="home" aria-label="0equips — página inicial">
+          <span class="brand-mark" aria-hidden="true">0</span>
+          <span>0equips</span>
+        </a>
+        <template x-for="link in links" :key="link.href">
+          <a class="nav-link" :href="link.href" :aria-current="currentPage === link.href ? 'page' : null" x-text="link.label"></a>
+        </template>
+        <div class="nav-auth" role="group" aria-label="Acesso à conta">
+          <div class="nav-user" x-cloak x-show="authenticated" aria-label="Usuário conectado">
+            <span class="nav-user-name" x-text="userName" :title="userName"></span>
+            <span class="nav-user-role" x-text="roleLabel"></span>
+          </div>
+          <button class="button" type="button" @click="logout()">Sair</button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="conteudo" class="container users-page" x-data="userManagement">
+      <header class="users-heading">
+        <p class="users-eyebrow">Gestão</p>
+        <h1>Gerenciar usuários</h1>
+        <p>Consulte os dados cadastrais e gerencie o status dos usuários.</p>
+      </header>
+
+      <p class="form-message form-error action-message" x-cloak x-show="actionError" x-text="actionError" role="alert"></p>
+      <p class="action-message action-success" x-cloak x-show="notice" x-text="notice" role="status"></p>
+
+      <section class="users-panel" aria-labelledby="users-title" :aria-busy="loading">
+        <header class="users-toolbar">
+          <div class="users-title">
+            <h2 id="users-title">Usuários cadastrados</h2>
+            <span class="users-count" x-cloak x-show="!loading && !loadError" x-text="users.length" aria-label="Total de usuários"></span>
+          </div>
+          <p>Clique no nome para ver os dados cadastrais.</p>
+        </header>
+
+        <p class="users-state" x-show="loading" role="status">Carregando usuários…</p>
+
+        <div class="users-state" x-cloak x-show="loadError" role="alert">
+          <h3>Não foi possível carregar os usuários</h3>
+          <p x-text="loadError"></p>
+          <button class="button" type="button" @click="loadUsers()">Tentar novamente</button>
+        </div>
+
+        <div class="users-state" x-cloak x-show="!loading && !loadError && users.length === 0" role="status">
+          <h3>Nenhum usuário cadastrado</h3>
+          <p>Os usuários aparecerão aqui assim que forem cadastrados.</p>
+        </div>
+
+        <table class="users-table" x-cloak x-show="!loading && !loadError && users.length > 0">
+          <caption class="visually-hidden">Usuários cadastrados, perfis, status e ações para ativar ou desativar</caption>
+          <thead>
+            <tr>
+              <th scope="col">Nome</th>
+              <th scope="col">Perfil</th>
+              <th scope="col">Status</th>
+              <th scope="col">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="user in users" :key="user.id">
+              <tr :aria-busy="updatingId === user.id">
+                <th scope="row">
+                  <button class="user-name" type="button" @click="openDetails(user)" aria-haspopup="dialog" aria-controls="user-dialog" x-text="user.name"></button>
+                </th>
+                <td x-text="roleLabel(user.role?.name)"></td>
+                <td>
+                  <span class="status-badge" :class="user.active ? 'status-active' : 'status-inactive'" x-text="user.active ? 'Ativo' : 'Inativo'"></span>
+                </td>
+                <td>
+                  <button class="button status-action" :class="user.active ? '' : 'button-primary'" type="button" :disabled="updatingId !== null" @click="toggleStatus(user)" :aria-label="`${user.active ? 'Desativar' : 'Ativar'} ${user.name}`" x-text="updatingId === user.id ? 'Salvando…' : (user.active ? 'Desativar' : 'Ativar')"></button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </section>
+
+      <dialog id="user-dialog" class="modal" x-ref="userDialog" aria-labelledby="user-dialog-title" @cancel="if (promoting) $event.preventDefault()" @close="selectedUser = null">
+        <header class="modal-header">
+          <h2 id="user-dialog-title">Dados cadastrais</h2>
+          <button class="button" type="button" :disabled="promoting" @click="$refs.userDialog.close()" autofocus>Fechar</button>
+        </header>
+        <dl class="user-details">
+          <div>
+            <dt>Nome</dt>
+            <dd x-text="selectedUser?.name"></dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd x-text="selectedUser?.email"></dd>
+          </div>
+          <div>
+            <dt>Telefone</dt>
+            <dd x-text="selectedUser?.phone"></dd>
+          </div>
+          <div>
+            <dt>Perfil</dt>
+            <dd x-text="roleLabel(selectedUser?.role?.name)"></dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd><span class="status-badge" :class="selectedUser?.active ? 'status-active' : 'status-inactive'" x-text="selectedUser?.active ? 'Ativo' : 'Inativo'"></span></dd>
+          </div>
+        </dl>
+        <div class="user-promotion" x-cloak x-show="canPromote || promotionError || promotionNotice" :aria-busy="promoting">
+          <button class="button button-primary" type="button" x-show="canPromote" :disabled="updatingId !== null" @click="promoteUser()" x-text="promoting ? 'Promovendo…' : 'Promover para gestor'"></button>
+          <p class="form-message form-error" x-show="promotionError" x-text="promotionError" role="alert"></p>
+          <p class="form-message action-success" x-show="promotionNotice" x-text="promotionNotice" role="status"></p>
+        </div>
+      </dialog>
+
+      <noscript><p>Ative o JavaScript no navegador para gerenciar os usuários.</p></noscript>
+    </main>
+  </body>
+</html>

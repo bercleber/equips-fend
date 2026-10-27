@@ -1,0 +1,27 @@
+.register-page { width: 480px; margin-inline: auto; padding-block: 48px 64px; }
+
+.register-heading { margin-bottom: 28px; text-align: center; }
+
+.register-heading h1 { margin: 0; font-size: 30px; line-height: 1.25; letter-spacing: -1px; font-weight: 650; }
+
+.register-heading p { margin: 12px 0 0; color: var(--color-muted); font-size: 14px; }
+
+.register-card { padding: 32px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+
+.register-fields { display: grid; gap: 20px; min-width: 0; margin: 0; padding: 0; border: 0; }
+
+.required-note { margin: 0; color: var(--color-muted); font-size: 12px; }
+
+.register-submit { width: 100%; margin-top: 4px; padding-block: 12px; }
+
+.register-success { padding-block: 16px; text-align: center; }
+
+.register-success h2 { margin: 0; color: var(--color-accent); font-size: 22px; }
+
+.register-success p { margin: 12px 0 24px; color: var(--color-muted); font-size: 14px; }
+
+.register-success .button { display: inline-block; }
+
+.back-link { display: block; width: fit-content; margin: 24px auto 0; color: var(--color-muted); font-size: 13px; }
+
+.back-link:hover { color: var(--color-accent); text-decoration: underline; }

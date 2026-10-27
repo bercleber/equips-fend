@@ -1,0 +1,65 @@
+.loans-page { padding-block: 48px 64px; }
+
+.cart-nav { margin-left: auto; color: var(--color-accent); font-size: 14px; font-weight: 600; }
+
+.cart-nav:hover { text-decoration: underline; }
+
+.loans-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; align-items: start; gap: 24px; }
+
+.loans-page .search-field input { width: 290px; }
+
+.loans-page .equipment-table th:first-child { width: 43%; }
+
+.loans-page .equipment-table th:nth-child(2) { width: 30%; }
+
+.loans-page .equipment-table th:last-child, .loans-page .equipment-table td:last-child { width: 27%; text-align: right; }
+
+.add-button { min-width: 100px; font-size: 13px; }
+
+.loan-cart { border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); scroll-margin-top: 24px; }
+
+.cart-header { padding: 24px; border-bottom: 1px solid var(--color-border); }
+
+.cart-header h2 { margin: 0; font-size: 17px; font-weight: 650; }
+
+.cart-header p { margin: 8px 0 0; color: var(--color-muted); font-size: 13px; }
+
+.cart-empty { padding: 36px 24px; text-align: center; }
+
+.cart-empty h3 { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+
+.cart-empty p { margin: 0; color: var(--color-muted); font-size: 13px; }
+
+.cart-items { margin: 0; padding: 0 24px; list-style: none; }
+
+.cart-items li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 20px; border-bottom: 1px solid var(--color-border); }
+
+.cart-items li:last-child { border-bottom: 0; }
+
+.cart-item-info { min-width: 0; overflow-wrap: anywhere; }
+
+.cart-item-info h3 { margin: 0; font-size: 14px; font-weight: 600; }
+
+.cart-item-info p { margin: 4px 0 0; color: var(--color-muted); font-size: 12px; }
+
+.cart-items .cart-item-unavailable { background: #fff0ee; box-shadow: inset 3px 0 #a33125; padding-inline: 12px; }
+
+.cart-item-info .cart-unavailable-label { color: #a33125; font-weight: 600; }
+
+.remove-button { padding: 4px 0; border: 0; background: transparent; color: #a33125; font-size: 12px; }
+
+.remove-button:hover:not(:disabled) { text-decoration: underline; }
+
+.remove-button:disabled { cursor: not-allowed; opacity: 0.65; }
+
+.cart-actions { display: grid; gap: 12px; padding: 24px; border-top: 1px solid var(--color-border); }
+
+.cart-actions .button { width: 100%; }
+
+.cart-actions .form-message { margin: 0; }
+
+.loan-fields { display: grid; gap: 16px; min-width: 0; margin: 0 0 8px; padding: 0; border: 0; }
+
+.loan-fields legend { margin-bottom: 16px; padding: 0; font-size: 14px; font-weight: 600; }
+
+.cart-notice { margin: 0; padding: 12px; border-radius: 7px; background: var(--color-accent-soft); color: var(--color-accent); font-size: 13px; }

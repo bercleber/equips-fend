@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-auth-required="loans.html">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar empréstimo | 0equips</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/loans.css">
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/loans.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+      <nav class="navbar container" aria-label="Navegação principal" x-data="accountNavigation">
+        <a class="brand" href="login.html" :href="home" aria-label="0equips — página inicial">
+          <span class="brand-mark" aria-hidden="true">0</span>
+          <span>0equips</span>
+        </a>
+        <template x-for="link in links" :key="link.href">
+          <a class="nav-link" :href="link.href" :aria-current="currentPage === link.href ? 'page' : null" x-text="link.label"></a>
+        </template>
+        <div class="nav-auth" role="group" aria-label="Acesso à conta">
+          <div class="nav-user" x-cloak x-show="authenticated" aria-label="Usuário conectado">
+            <span class="nav-user-name" x-text="userName" :title="userName"></span>
+            <span class="nav-user-role" x-text="roleLabel"></span>
+          </div>
+          <button class="button" type="button" @click="logout()">Sair</button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="conteudo" class="container loans-page" x-data="loanRequest">
+      <header class="page-heading">
+        <p class="eyebrow">Empréstimos</p>
+        <h1>Solicitar empréstimo</h1>
+        <p>Escolha os equipamentos e adicione ao seu carrinho de empréstimos.</p>
+      </header>
+
+      <p class="visually-hidden" role="status" x-text="announcement"></p>
+
+      <div class="loans-layout">
+        <section class="inventory" aria-labelledby="inventory-title" :aria-busy="loading">
+          <div class="inventory-toolbar">
+            <div class="inventory-title">
+              <h2 id="inventory-title">Equipamentos</h2>
+              <span class="item-count" x-cloak x-show="!loading && !error" x-text="items.length" aria-label="Total de equipamentos"></span>
+            </div>
+            <div class="search-field">
+              <label for="equipment-search">Buscar equipamentos</label>
+              <input id="equipment-search" type="search" x-model="search" placeholder="Buscar por nome ou categoria" :disabled="loading || !!error">
+            </div>
+          </div>
+
+          <p class="list-state" x-show="loading" role="status">Carregando equipamentos…</p>
+
+          <div class="list-state" x-cloak x-show="error" role="alert">
+            <h3>Não foi possível carregar os equipamentos</h3>
+            <p x-text="error"></p>
+            <button class="button" type="button" @click="loadItems()">Tentar novamente</button>
+          </div>
+
+          <div class="list-state" x-cloak x-show="!loading && !error && items.length === 0" role="status">
+            <h3>Nenhum equipamento disponível</h3>
+            <p>Não há equipamentos disponíveis para solicitar neste momento.</p>
+          </div>
+
+          <div class="list-state" x-cloak x-show="!loading && !error && items.length > 0 && filteredItems.length === 0" role="status">
+            <h3>Nenhum resultado encontrado</h3>
+            <p>Tente buscar por outro nome ou categoria.</p>
+            <button class="button" type="button" @click="search = ''">Limpar busca</button>
+          </div>
+
+          <div x-cloak x-show="!loading && !error && filteredItems.length > 0">
+            <table class="equipment-table">
+              <caption class="visually-hidden">Equipamentos e categorias, com opção de adicionar ao carrinho</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Nome</th>
+                  <th scope="col">Categoria</th>
+                  <th scope="col">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="item in filteredItems" :key="item.id">
+                  <tr>
+                    <th scope="row" x-text="item.name"></th>
+                    <td><span class="category-tag" x-text="item.category.name"></span></td>
+                    <td>
+                      <button class="button add-button" type="button" @click="addItem(item)" :disabled="submitting || isInCart(item.id)" :aria-label="`${item.name}: ${isInCart(item.id) ? 'já está no carrinho' : 'adicionar ao carrinho'}`" x-text="isInCart(item.id) ? 'Adicionado' : 'Adicionar'"></button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+            <p class="list-footer" role="status" x-text="`${filteredItems.length} de ${items.length} ${items.length === 1 ? 'item' : 'itens'}`"></p>
+          </div>
+        </section>
+
+        <section id="carrinho" class="loan-cart" aria-labelledby="cart-title">
+          <header class="cart-header">
+            <h2 id="cart-title">Carrinho de empréstimos</h2>
+            <p x-text="`${cart.length} ${cart.length === 1 ? 'equipamento selecionado' : 'equipamentos selecionados'}`">0 equipamentos selecionados</p>
+          </header>
+
+          <div class="cart-empty" x-show="cart.length === 0">
+            <h3>Seu carrinho está vazio</h3>
+            <p>Adicione equipamentos da lista para montar sua requisição.</p>
+          </div>
+
+          <ul class="cart-items" x-cloak x-show="cart.length > 0" aria-label="Equipamentos selecionados">
+            <template x-for="item in cart" :key="item.id">
+              <li :class="{ 'cart-item-unavailable': isUnavailable(item.id) }">
+                <div class="cart-item-info">
+                  <h3 x-text="item.name"></h3>
+                  <p x-text="item.category.name"></p>
+                  <p class="cart-unavailable-label" x-show="isUnavailable(item.id)">Indisponível para empréstimo</p>
+                </div>
+                <button class="remove-button" type="button" @click="removeItem(item.id)" :disabled="submitting" :aria-label="`Remover ${item.name} do carrinho`">Remover</button>
+              </li>
+            </template>
+          </ul>
+
+          <form class="cart-actions" method="post" @submit.prevent="submitRequest()" :aria-busy="submitting">
+            <fieldset class="loan-fields" disabled :disabled="submitting || cart.length === 0">
+              <legend>Período do empréstimo</legend>
+              <div class="form-field">
+                <label for="pickup-date">Data da retirada</label>
+                <input id="pickup-date" name="pickup_date" type="date" x-model="pickupDate" required>
+              </div>
+              <div class="form-field">
+                <label for="due-date">Data da devolução</label>
+                <input id="due-date" name="due_date" type="date" x-model="dueDate" :min="pickupDate" required aria-describedby="due-date-hint">
+                <p id="due-date-hint" class="field-hint">A devolução deve ser posterior à retirada.</p>
+              </div>
+            </fieldset>
+            <button class="button" type="button" disabled :disabled="submitting || cart.length === 0" @click="clearCart()">Limpar carrinho</button>
+            <button class="button button-primary" type="submit" disabled :disabled="submitting || cart.length === 0" x-text="submitting ? 'Enviando…' : 'Enviar requisição de empréstimo'">Enviar requisição de empréstimo</button>
+            <p class="visually-hidden" role="status" x-text="submitting ? 'Enviando requisição. Aguarde.' : ''"></p>
+            <p class="form-message form-error" x-cloak x-show="hasUnavailableItems && !submissionError" role="alert">Há equipamentos indisponíveis destacados no carrinho. Remova ou substitua esses itens antes de enviar.</p>
+            <p class="form-message form-error" x-cloak x-show="submissionError" x-text="submissionError" role="alert"></p>
+            <p class="cart-notice" x-cloak x-show="submissionNotice" x-text="submissionNotice" role="status"></p>
+          </form>
+        </section>
+      </div>
+      <noscript><p class="noscript-message">Ative o JavaScript no navegador para montar seu carrinho de empréstimos.</p></noscript>
+    </main>
+  </body>
+</html>

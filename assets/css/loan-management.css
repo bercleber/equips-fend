@@ -1,0 +1,69 @@
+.loan-management-page { padding-block: 48px 64px; }
+
+.loan-toolbar-actions { display: flex; align-items: flex-end; gap: 16px; }
+
+.loan-status-filter { width: 220px; }
+
+.status-denied { background: #fff0ee; color: #a33125; }
+
+.pending-loans-table th:first-child { width: 9%; }
+
+.pending-loans-table th:nth-child(2) { width: 17%; }
+
+.pending-loans-table th:nth-child(3), .pending-loans-table th:nth-child(4) { width: 12%; }
+
+.pending-loans-table th:nth-child(5) { width: 16%; }
+
+.pending-loans-table th:last-child { width: 34%; }
+
+.pending-loans-table th, .pending-loans-table td { padding-inline: 14px; }
+
+.pending-loans-table th:last-child, .pending-loans-table td:last-child { text-align: right; }
+
+.loan-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+.loan-actions .button { padding-inline: 12px; }
+
+.loan-deny { color: #a33125; border-color: #e7c4bf; }
+
+.loan-deny:hover:not(:disabled) { color: #a33125; background: #fff0ee; border-color: #a33125; }
+
+.loan-action-message { margin: 0 0 24px; padding: 12px 14px; border-radius: 7px; font-size: 14px; }
+
+.loan-success { background: var(--color-accent-soft); color: var(--color-accent); }
+
+.loan-details { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 24px 0; }
+
+.loan-details dt { margin-bottom: 5px; color: var(--color-muted); font-size: 12px; font-weight: 600; }
+
+.loan-details dd { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+
+.loan-equipment-note { margin: 0; color: var(--color-muted); font-size: 14px; }
+
+.loan-details-state { margin: 24px 0 0; font-size: 14px; }
+
+.loan-details-state .form-message { margin: 0 0 16px; }
+
+.loan-equipments { padding-top: 20px; border-top: 1px solid var(--color-border); }
+
+.loan-equipments h3 { margin: 0 0 16px; font-size: 16px; }
+
+.loan-equipment-list { margin: 0; padding: 0; list-style: none; }
+
+.loan-equipment-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; border-bottom: 1px solid var(--color-border); }
+
+.loan-equipment-list li:last-child { border-bottom: 0; }
+
+.loan-equipment-name { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+
+.loan-equipment-list .category-tag { flex-shrink: 0; max-width: 45%; overflow-wrap: anywhere; }
+
+.loan-dialog-description { overflow-wrap: anywhere; }
+
+.loan-dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+
+.loan-denial-reason { resize: vertical; }
+
+.status-pending { background: #fff4d9; color: #795610; }
+
+.loan-list-warning { margin: 0; padding: 12px 24px; border-top: 1px solid var(--color-border); background: #fff4d9; color: #795610; font-size: 14px; }

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-auth-required="equipments.html">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar equipamentos | 0equips</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/equipments.css">
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/equipments.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+      <nav class="navbar container" aria-label="Navegação principal" x-data="accountNavigation">
+        <a class="brand" href="login.html" :href="home" aria-label="0equips — página inicial">
+          <span class="brand-mark" aria-hidden="true">0</span>
+          <span>0equips</span>
+        </a>
+        <template x-for="link in links" :key="link.href">
+          <a class="nav-link" :href="link.href" :aria-current="currentPage === link.href ? 'page' : null" x-text="link.label"></a>
+        </template>
+        <div class="nav-auth" role="group" aria-label="Acesso à conta">
+          <div class="nav-user" x-cloak x-show="authenticated" aria-label="Usuário conectado">
+            <span class="nav-user-name" x-text="userName" :title="userName"></span>
+            <span class="nav-user-role" x-text="roleLabel"></span>
+          </div>
+          <button class="button" type="button" @click="logout()">Sair</button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="conteudo" class="container equipment-page" x-data="equipmentManagement">
+      <header class="page-heading">
+        <p class="eyebrow">Administração</p>
+        <h1>Gerenciar equipamentos</h1>
+        <p>Consulte os itens cadastrados e gerencie os equipamentos e suas categorias.</p>
+      </header>
+
+      <div class="page-actions" role="group" aria-label="Cadastrar itens">
+        <button class="button button-primary" type="button" disabled :disabled="loading || !!error" @click="openEquipment()" aria-haspopup="dialog" aria-controls="equipment-dialog">Adicionar equipamento</button>
+        <button class="button" type="button" disabled :disabled="false" @click="openCategory()" aria-haspopup="dialog" aria-controls="category-dialog">Adicionar categoria</button>
+      </div>
+
+      <p class="equipment-notice" x-cloak x-show="notice" x-text="notice" role="status"></p>
+
+      <section class="inventory" aria-labelledby="inventory-title" :aria-busy="loading">
+        <div class="inventory-toolbar">
+          <div class="inventory-title">
+            <h2 id="inventory-title">Itens cadastrados</h2>
+            <span class="item-count" x-cloak x-show="!loading && !error" x-text="items.length" aria-label="Total de itens"></span>
+          </div>
+          <div class="search-field">
+            <label for="equipment-search">Buscar equipamentos</label>
+            <input id="equipment-search" type="search" x-model="search" placeholder="Buscar por nome ou categoria" :disabled="loading || !!error">
+          </div>
+        </div>
+
+        <p class="list-state" x-show="loading" role="status">Carregando equipamentos…</p>
+
+        <div class="list-state" x-cloak x-show="error" role="alert">
+          <h3>Não foi possível carregar os equipamentos</h3>
+          <p x-text="error"></p>
+          <button class="button" type="button" @click="loadItems()">Tentar novamente</button>
+        </div>
+
+        <div class="list-state" x-cloak x-show="!loading && !error && items.length === 0" role="status">
+          <h3>Nenhum equipamento cadastrado</h3>
+          <p>Use “Adicionar equipamento” para cadastrar o primeiro item.</p>
+        </div>
+
+        <div class="list-state" x-cloak x-show="!loading && !error && items.length > 0 && filteredItems.length === 0" role="status">
+          <h3>Nenhum resultado encontrado</h3>
+          <p>Tente buscar por outro nome ou categoria.</p>
+          <button class="button" type="button" @click="search = ''">Limpar busca</button>
+        </div>
+
+        <div x-cloak x-show="!loading && !error && filteredItems.length > 0">
+          <table class="equipment-table">
+            <caption class="visually-hidden">Equipamentos cadastrados, categorias e ações de edição e remoção</caption>
+            <thead>
+              <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Categoria</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="item in filteredItems" :key="item.id">
+                <tr>
+                  <th scope="row" x-text="item.name"></th>
+                  <td><span class="category-tag" x-text="item.category.name"></span></td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="button" type="button" @click="openEquipment(item)" :aria-label="`Editar ${item.name}`" aria-haspopup="dialog" aria-controls="equipment-dialog">Editar</button>
+                      <button class="button button-danger" type="button" @click="openRemoval(item)" :aria-label="`Remover ${item.name}`" aria-haspopup="dialog" aria-controls="removal-dialog">Remover</button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <p class="list-footer" role="status" x-text="`${filteredItems.length} de ${items.length} ${items.length === 1 ? 'item' : 'itens'}`"></p>
+        </div>
+      </section>
+
+      <dialog id="equipment-dialog" class="modal" x-ref="equipmentDialog" aria-labelledby="equipment-dialog-title" @cancel="if (saving) $event.preventDefault()">
+        <header class="modal-header">
+          <h2 id="equipment-dialog-title" x-text="editingId === null ? 'Adicionar equipamento' : 'Editar equipamento'">Adicionar equipamento</h2>
+          <button class="button" type="button" :disabled="saving" @click="$refs.equipmentDialog.close()">Fechar</button>
+        </header>
+        <p class="modal-note" x-show="editingId !== null" role="status">O salvamento de alterações ainda não está disponível.</p>
+        <form class="modal-form" method="post" @submit.prevent="saveEquipment()" :aria-busy="saving">
+          <fieldset class="modal-fields" :disabled="saving">
+            <legend class="visually-hidden">Dados do equipamento</legend>
+            <div class="form-field">
+              <label for="equipment-name">Nome</label>
+              <input id="equipment-name" name="name" type="text" x-model="equipment.name" maxlength="50" required autofocus>
+            </div>
+            <div class="form-field">
+              <label for="equipment-code">Código</label>
+              <input id="equipment-code" name="code" type="text" x-model="equipment.code" maxlength="50" required>
+            </div>
+            <div class="form-field">
+              <label for="equipment-category">Categoria</label>
+              <select id="equipment-category" name="category_id" x-model="equipment.categoryId" :disabled="categoriesLoading || !!categoriesError" required>
+                <option value="" disabled>Selecione uma categoria</option>
+                <template x-for="entry in categories" :key="entry.id">
+                  <option :value="entry.id" x-text="entry.name" :selected="String(entry.id) === String(equipment.categoryId)"></option>
+                </template>
+              </select>
+              <p class="field-hint" x-show="categoriesLoading" role="status">Carregando categorias…</p>
+              <p class="field-hint" x-show="!categoriesLoading && !categoriesError && categories.length === 0">Cadastre uma categoria pelo botão “Adicionar categoria” antes de adicionar um equipamento.</p>
+            </div>
+          </fieldset>
+          <div x-show="categoriesError" role="alert">
+            <p class="form-message form-error" x-text="categoriesError"></p>
+            <button class="button" type="button" @click="loadCategories()">Tentar novamente</button>
+          </div>
+          <p class="form-message form-error" x-show="formError" x-text="formError" role="alert"></p>
+          <div class="modal-actions">
+            <button class="button" type="button" :disabled="saving" @click="$refs.equipmentDialog.close()">Cancelar</button>
+            <button class="button button-primary" type="submit" :disabled="saving || editingId !== null || categoriesLoading || !!categoriesError || categories.length === 0" x-text="saving ? 'Salvando…' : (editingId === null ? 'Cadastrar equipamento' : 'Salvar alterações')">Cadastrar equipamento</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="category-dialog" class="modal" x-ref="categoryDialog" aria-labelledby="category-dialog-title" @cancel="if (saving) $event.preventDefault()">
+        <header class="modal-header">
+          <h2 id="category-dialog-title">Adicionar categoria</h2>
+          <button class="button" type="button" :disabled="saving" @click="$refs.categoryDialog.close()">Fechar</button>
+        </header>
+        <form class="modal-form" method="post" @submit.prevent="saveCategory()" :aria-busy="saving">
+          <fieldset class="modal-fields" :disabled="saving">
+            <legend class="visually-hidden">Dados da categoria</legend>
+            <div class="form-field">
+              <label for="category-name">Nome</label>
+              <input id="category-name" name="name" type="text" x-model="category.name" maxlength="30" required autofocus>
+            </div>
+            <div class="form-field">
+              <label for="category-description">Descrição</label>
+              <textarea id="category-description" name="description" x-model="category.description" maxlength="300" rows="4" required></textarea>
+            </div>
+          </fieldset>
+          <p class="form-message form-error" x-show="formError" x-text="formError" role="alert"></p>
+          <div class="modal-actions">
+            <button class="button" type="button" :disabled="saving" @click="$refs.categoryDialog.close()">Cancelar</button>
+            <button class="button button-primary" type="submit" :disabled="saving" x-text="saving ? 'Salvando…' : 'Cadastrar categoria'">Cadastrar categoria</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="removal-dialog" class="modal" x-ref="removalDialog" aria-labelledby="removal-dialog-title" aria-describedby="removal-description" @cancel="if (saving) $event.preventDefault()">
+        <header class="modal-header">
+          <h2 id="removal-dialog-title">Remover equipamento</h2>
+          <button class="button" type="button" :disabled="saving" @click="$refs.removalDialog.close()">Fechar</button>
+        </header>
+        <p id="removal-description" class="removal-description">Deseja remover <strong x-text="selectedItem?.name"></strong>? Esta ação não pode ser desfeita.</p>
+        <form method="post" @submit.prevent="removeEquipment()" :aria-busy="saving">
+          <p class="form-message form-error" x-show="formError" x-text="formError" role="alert"></p>
+          <div class="modal-actions">
+            <button class="button" type="button" :disabled="saving" @click="$refs.removalDialog.close()" autofocus>Cancelar</button>
+            <button class="button button-danger" type="submit" :disabled="saving" x-text="saving ? 'Removendo…' : 'Remover equipamento'">Remover equipamento</button>
+          </div>
+        </form>
+      </dialog>
+
+      <noscript><p class="noscript-message">Ative o JavaScript no navegador para gerenciar os equipamentos.</p></noscript>
+    </main>
+  </body>
+</html>

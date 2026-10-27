@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar | 0equips</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/register.css">
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/register.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+      <nav class="navbar container" aria-label="Navegação principal" x-data="accountNavigation">
+        <a class="brand" href="login.html" :href="home" aria-label="0equips — página inicial">
+          <span class="brand-mark" aria-hidden="true">0</span>
+          <span>0equips</span>
+        </a>
+        <template x-for="link in links" :key="link.href">
+          <a class="nav-link" :href="link.href" x-text="link.label"></a>
+        </template>
+        <div class="nav-auth" role="group" aria-label="Acesso à conta">
+          <a class="button" href="login.html" x-show="!authenticated">Entrar</a>
+          <a class="button button-primary" href="register.html" aria-current="page" x-show="!authenticated">Registrar</a>
+          <div class="nav-user" x-cloak x-show="authenticated" aria-label="Usuário conectado">
+            <span class="nav-user-name" x-text="userName" :title="userName"></span>
+            <span class="nav-user-role" x-text="roleLabel"></span>
+          </div>
+          <button class="button" type="button" x-cloak x-show="authenticated" @click="logout()">Sair</button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="conteudo" class="register-page" x-data="registrationForm">
+      <header class="register-heading">
+        <h1>Crie sua conta</h1>
+        <p>Preencha seus dados para se registrar no 0equips.</p>
+      </header>
+
+      <section class="register-card" aria-label="Cadastro de usuário">
+        <form method="post" @submit.prevent="register()" x-show="!success" :aria-busy="submitting">
+          <fieldset class="register-fields" disabled :disabled="submitting">
+            <legend class="visually-hidden">Dados da conta</legend>
+            <p class="required-note">Todos os campos são obrigatórios.</p>
+
+            <div class="form-field">
+              <label for="name">Nome</label>
+              <input id="name" name="name" type="text" autocomplete="name" x-model.trim="form.name" minlength="6" maxlength="50" required aria-describedby="name-hint">
+              <p id="name-hint" class="field-hint">Use de 6 a 50 caracteres.</p>
+            </div>
+
+            <div class="form-field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" x-model.trim="form.email" minlength="8" maxlength="40" required aria-describedby="email-hint">
+              <p id="email-hint" class="field-hint">Use um email válido, de 8 a 40 caracteres.</p>
+            </div>
+
+            <div class="form-field">
+              <label for="phone">Telefone</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="numeric" x-model="form.phone" pattern="[0-9]{10,12}" minlength="10" maxlength="12" required aria-describedby="phone-hint">
+              <p id="phone-hint" class="field-hint">Inclua o DDD. Digite apenas números, de 10 a 12 dígitos.</p>
+            </div>
+
+            <div class="form-field">
+              <label for="password">Senha</label>
+              <input id="password" name="password" type="password" autocomplete="new-password" x-model="form.password" minlength="6" required aria-describedby="password-hint">
+              <p id="password-hint" class="field-hint">Use pelo menos 6 caracteres.</p>
+            </div>
+
+            <button class="button button-primary register-submit" type="submit" x-text="submitting ? 'Registrando…' : 'Registrar'">Registrar</button>
+          </fieldset>
+          <p class="form-message form-error" x-cloak x-show="error" x-text="error" role="alert"></p>
+          <p class="visually-hidden" role="status" x-text="submitting ? 'Enviando cadastro. Aguarde.' : ''"></p>
+        </form>
+
+        <div class="register-success" x-cloak x-show="success">
+          <h2 tabindex="-1" x-ref="successHeading">Conta criada com sucesso!</h2>
+          <p>Seu cadastro foi concluído.</p>
+          <a class="button button-primary" href="login.html">Ir para login</a>
+        </div>
+        <noscript><p class="form-message">Ative o JavaScript no navegador para criar sua conta.</p></noscript>
+      </section>
+
+      <a class="back-link" href="index.html">Voltar para equipamentos</a>
+    </main>
+  </body>
+</html>

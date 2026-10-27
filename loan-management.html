@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-auth-required="loan-management.html">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar empréstimos | 0equips</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/loan-management.css">
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/loan-management.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+      <nav class="navbar container" aria-label="Navegação principal" x-data="accountNavigation">
+        <a class="brand" href="login.html" :href="home" aria-label="0equips — página inicial">
+          <span class="brand-mark" aria-hidden="true">0</span>
+          <span>0equips</span>
+        </a>
+        <template x-for="link in links" :key="link.href">
+          <a class="nav-link" :href="link.href" :aria-current="currentPage === link.href ? 'page' : null" x-text="link.label"></a>
+        </template>
+        <div class="nav-auth" role="group" aria-label="Acesso à conta">
+          <div class="nav-user" x-cloak x-show="authenticated" aria-label="Usuário conectado">
+            <span class="nav-user-name" x-text="userName" :title="userName"></span>
+            <span class="nav-user-role" x-text="roleLabel"></span>
+          </div>
+          <button class="button" type="button" @click="logout()">Sair</button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="conteudo" class="container loan-management-page" x-data="loanManagement">
+      <header class="page-heading">
+        <p class="eyebrow">Gestão</p>
+        <h1>Gerenciar empréstimos</h1>
+        <p>Consulte e acompanhe as requisições de empréstimo por status.</p>
+      </header>
+
+      <p class="loan-action-message form-error" x-cloak x-show="actionError" x-text="actionError" role="alert"></p>
+      <p class="loan-action-message loan-success" x-cloak x-show="notice" x-text="notice" role="status"></p>
+      <p class="visually-hidden" role="status" x-text="updatingId !== null ? 'Atualizando requisição. Aguarde.' : ''"></p>
+
+      <section class="inventory" aria-labelledby="pending-loans-title" :aria-busy="loading || updatingId !== null">
+        <div class="inventory-toolbar">
+          <div class="inventory-title">
+            <h2 id="pending-loans-title" x-text="filterLabel">Aguardando análise</h2>
+            <span class="item-count" x-cloak x-show="!loading && !error" x-text="loans.length" aria-label="Total de requisições no filtro selecionado"></span>
+          </div>
+          <div class="loan-toolbar-actions">
+            <div class="form-field loan-status-filter">
+              <label for="loan-status">Filtrar por status</label>
+              <select id="loan-status" x-model="statusFilter" @change="loadLoans()" disabled :disabled="loading || updatingId !== null">
+                <option value="waiting_rev">Aguardando análise</option>
+                <option value="waiting_pickup">Aceitas</option>
+                <option value="on_loan">Em empréstimo</option>
+                <option value="returned">Devolvidas</option>
+                <option value="denied">Negadas</option>
+              </select>
+            </div>
+            <button class="button" type="button" disabled :disabled="loading || updatingId !== null" @click="loadLoans()" x-text="loading ? 'Atualizando…' : 'Atualizar lista'">Atualizar lista</button>
+          </div>
+        </div>
+
+        <p class="list-state" x-show="loading" role="status">Carregando requisições…</p>
+
+        <div class="list-state" x-cloak x-show="!loading && error" role="alert">
+          <h3>Não foi possível carregar as requisições</h3>
+          <p x-text="error"></p>
+          <button class="button" type="button" @click="loadLoans()">Tentar novamente</button>
+        </div>
+
+        <div class="list-state" x-cloak x-show="!loading && !error && loans.length === 0" role="status">
+          <h3>Nenhuma requisição encontrada</h3>
+          <p x-text="`Não há requisições no filtro “${filterLabel}”.`"></p>
+        </div>
+
+        <div x-cloak x-show="!loading && !error && loans.length > 0">
+          <p class="loan-list-warning" x-show="usersError" x-text="usersError" role="status"></p>
+          <table class="equipment-table pending-loans-table">
+            <caption class="visually-hidden" x-text="`Requisições: ${filterLabel}. Ordenadas da mais antiga para a mais recente.`"></caption>
+            <thead>
+              <tr>
+                <th scope="col">Requisição</th>
+                <th scope="col">Solicitante</th>
+                <th scope="col">Retirada</th>
+                <th scope="col">Devolução</th>
+                <th scope="col">Status</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="loan in loans" :key="loan.id">
+                <tr :aria-busy="updatingId === loan.id">
+                  <th scope="row" x-text="`#${loan.id}`"></th>
+                  <td x-text="requesterName(loan)"></td>
+                  <td><time :datetime="loan.pickup_date" x-text="formatDate(loan.pickup_date)"></time></td>
+                  <td><time :datetime="loan.due_date" x-text="formatDate(loan.due_date)"></time></td>
+                  <td><span class="status-badge" :class="statusClass(loan.status)" x-text="statusLabel(loan.status)"></span></td>
+                  <td>
+                    <div class="loan-actions">
+                      <button class="button button-primary" type="button" x-show="loan.status === 'waiting_rev'" :disabled="updatingId !== null" @click="evaluateLoan(loan, true)" :aria-label="`Aceitar requisição #${loan.id}`">Aceitar</button>
+                      <button class="button loan-deny" type="button" x-show="loan.status === 'waiting_rev'" :disabled="updatingId !== null" @click="openDenial(loan)" :aria-label="`Negar requisição #${loan.id}`" aria-haspopup="dialog" aria-controls="denial-dialog">Negar</button>
+                      <button class="button button-primary" type="button" x-show="loan.status === 'waiting_pickup'" :disabled="updatingId !== null" @click="confirmLoanEvent(loan, true)" :aria-label="`Confirmar retirada da requisição #${loan.id}`">Confirmar retirada</button>
+                      <button class="button" type="button" x-show="canReturn(loan)" :disabled="updatingId !== null" @click="confirmLoanEvent(loan, false)" :aria-label="`Confirmar devolução da requisição #${loan.id}`">Confirmar devolução</button>
+                      <button class="button" type="button" :disabled="updatingId !== null" @click="openDetails(loan)" :aria-label="`Ver detalhes da requisição #${loan.id}`" aria-haspopup="dialog" aria-controls="loan-details-dialog">Detalhes</button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <p class="list-footer" role="status" x-text="`${loans.length} ${loans.length === 1 ? 'requisição' : 'requisições'} · ${filterLabel} · Mais antigas primeiro`"></p>
+        </div>
+      </section>
+
+      <dialog id="loan-details-dialog" class="modal" x-ref="detailsDialog" aria-labelledby="loan-details-title" :aria-busy="detailsLoading" @close="resetDetails()">
+        <header class="modal-header">
+          <h2 id="loan-details-title" x-text="`Requisição #${selectedLoan?.id ?? ''}`">Detalhes da requisição</h2>
+          <button class="button" type="button" @click="$refs.detailsDialog.close()" autofocus>Fechar</button>
+        </header>
+        <p class="loan-details-state" x-show="detailsLoading" role="status">Carregando detalhes…</p>
+        <div class="loan-details-state" x-cloak x-show="detailsError" role="alert">
+          <p class="form-message form-error" x-text="detailsError"></p>
+          <button class="button" type="button" @click="loadDetails()" :disabled="detailsLoading">Tentar novamente</button>
+        </div>
+        <div x-cloak x-show="!detailsLoading && !detailsError">
+          <dl class="loan-details">
+            <div>
+              <dt>Solicitante</dt>
+              <dd x-text="requesterName(selectedLoan)"></dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd><span class="status-badge" :class="statusClass(selectedLoan?.status)" x-text="statusLabel(selectedLoan?.status)"></span></dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd x-text="selectedUser?.email || 'Não disponível'"></dd>
+            </div>
+            <div>
+              <dt>Telefone</dt>
+              <dd x-text="selectedUser?.phone || 'Não disponível'"></dd>
+            </div>
+            <div>
+              <dt>Data da solicitação</dt>
+              <dd x-text="formatDate(selectedLoan?.request_date)"></dd>
+            </div>
+            <div>
+              <dt>Data da retirada</dt>
+              <dd x-text="formatDate(selectedLoan?.pickup_date)"></dd>
+            </div>
+            <div>
+              <dt>Data da devolução</dt>
+              <dd x-text="formatDate(selectedLoan?.due_date)"></dd>
+            </div>
+            <div x-show="selectedLoan?.status === 'denied'">
+              <dt>Motivo da negativa</dt>
+              <dd x-text="selectedLoan?.reason || 'Não informado'"></dd>
+            </div>
+          </dl>
+          <section class="loan-equipments" aria-labelledby="loan-equipments-title">
+            <h3 id="loan-equipments-title">Equipamentos solicitados</h3>
+            <p class="loan-equipment-note" x-show="selectedLoan?.equipments?.length === 0">Nenhum equipamento vinculado a esta requisição.</p>
+            <ul class="loan-equipment-list" x-show="selectedLoan?.equipments?.length > 0">
+              <template x-for="equipment in (selectedLoan?.equipments || [])" :key="equipment.id">
+                <li>
+                  <span class="loan-equipment-name" x-text="equipment.name"></span>
+                  <span class="category-tag" x-text="equipment.category?.name || 'Sem categoria'"></span>
+                </li>
+              </template>
+            </ul>
+          </section>
+        </div>
+      </dialog>
+
+      <dialog id="denial-dialog" class="modal" x-ref="denialDialog" aria-labelledby="denial-title" @cancel="if (updatingId !== null) $event.preventDefault()" @close="selectedLoan = null">
+        <header class="modal-header">
+          <h2 id="denial-title">Negar requisição</h2>
+          <button class="button" type="button" :disabled="updatingId !== null" @click="$refs.denialDialog.close()">Fechar</button>
+        </header>
+        <p class="loan-dialog-description">Negar a requisição <strong x-text="`#${selectedLoan?.id ?? ''}`"></strong> de <span x-text="requesterName(selectedLoan)"></span>?</p>
+        <form method="post" @submit.prevent="evaluateLoan(selectedLoan, false)" :aria-busy="updatingId !== null">
+          <div class="form-field">
+            <label for="denial-reason">Motivo (opcional)</label>
+            <textarea id="denial-reason" class="loan-denial-reason" name="reason" rows="4" x-model="denialReason" :disabled="updatingId !== null" autofocus></textarea>
+          </div>
+          <p class="form-message form-error" x-show="denialError" x-text="denialError" role="alert"></p>
+          <div class="loan-dialog-actions">
+            <button class="button" type="button" :disabled="updatingId !== null" @click="$refs.denialDialog.close()">Cancelar</button>
+            <button class="button loan-deny" type="submit" :disabled="updatingId !== null" x-text="updatingId !== null ? 'Salvando…' : 'Negar requisição'">Negar requisição</button>
+          </div>
+        </form>
+      </dialog>
+
+      <noscript><p class="noscript-message">Ative o JavaScript no navegador para consultar as requisições de empréstimo.</p></noscript>
+    </main>
+  </body>
+</html>
